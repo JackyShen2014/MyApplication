@@ -20,6 +20,10 @@
             android:name=".TimerActivity"
             android:label="@string/title_activity_timer" >
         </activity>
+        <activity
+            android:name=".FileOPActivity"
+            android:label="@string/title_activity_file_op" >
+        </activity>
     </application>
 
 </manifest>
