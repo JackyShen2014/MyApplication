@@ -30,6 +30,9 @@ public class FileOPActivity extends Activity {
     private Button button2;
     private Button button3;
     private Button button4;
+    private Button button5;
+    private Button button6;
+
     private TextView textView;
 
 
@@ -65,32 +68,121 @@ public class FileOPActivity extends Activity {
                 readFromSDCard();
             }
         });
+
+        button4.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String fileName = "asset_testfile";
+                String content = readFromAssets(fileName);
+                if (content != null) {
+                    textView.setText(content);
+                }
+
+            }
+        });
+
+        button5.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //获取当前app路径
+                String appFilePath = getApplicationContext().getFilesDir().getAbsolutePath();
+
+                //获取该程序的安装包路径
+                String packagePath = getApplicationContext().getPackageResourcePath();
+
+                //获取程序默认数据库路径
+                //String dataPath = getApplicationContext().getDatabasePath(new String("DataBaseName")).getAbsolutePath();
+
+                Log.i(LOG_TAG, "Current app path= " + appFilePath);
+                Log.i(LOG_TAG, "Current package path= " + packagePath);
+
+                String writeContent = "Current app file path: " + appFilePath;
+
+                writeFileToDataFolder(appFilePath, writeContent);
+            }
+        });
+
+        button6.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //read data from data/data
+                String fileDir = getApplicationContext().getFilesDir().getAbsolutePath();
+
+                String content = readFromAppFiles(fileDir);
+                textView.setText(content);
+            }
+        });
     }
 
 
-
-    private void writeToSDCard(){
-        File logDir = new File(StorageUtil.getAbsoluteSdcardPath()+"/carlocation/log/");
-        if(!logDir.exists()){
-            logDir.setWritable(true);
-            boolean ret = logDir.mkdir();
-            Log.i(LOG_TAG,"writeToSDCard(): create log dir: "+logDir.getAbsolutePath()+" "+ret);
+    private String readFromAppFiles(String filePath) {
+        File fileDir = new File(filePath);
+        Log.i(LOG_TAG, "Current file path is " + fileDir.getAbsolutePath());
+        if (!fileDir.exists()) {
+            Log.e(LOG_TAG, "No file folder exists!");
+            return null;
         }
 
-        if (!logDir.canWrite()){
+        if (!fileDir.canRead()) {
+            fileDir.setReadable(true);
+        }
+
+        File[] files = fileDir.listFiles();
+        String ret = "Default value!";
+        if (files != null && files.length != 0) {
+            for (File file : files) {
+                ret += readFileSdcardFile(file.getAbsolutePath()) + "\n";
+            }
+        }
+        return ret;
+    }
+
+
+    public void writeFileToDataFolder(String appFilePath, String writeContent) {
+        File appFileDir = new File(appFilePath);
+
+        if (!appFileDir.exists()) {
+            //Create app file dir if not exists.
+            appFileDir.mkdir();
+            appFileDir.setWritable(true);
+        }
+
+        if (!appFileDir.canWrite()) {
+            appFileDir.setWritable(true);
+        }
+
+        //Create a new file in this folder.
+        int rand = new Random().nextInt(100);
+        File newFile = new File(appFileDir + "/file_" + rand);
+
+        writeFileSdCardFile(newFile.getAbsolutePath(), writeContent);
+
+    }
+
+
+    public void writeToSDCard() {
+        File logDir = new File(StorageUtil.getAbsoluteSdcardPath() + "/carlocation/log/");
+        if (!logDir.exists()) {
+            logDir.setWritable(true);
+            boolean ret = logDir.mkdir();
+            Log.i(LOG_TAG, "writeToSDCard(): create log dir: " + logDir.getAbsolutePath() + " " + ret);
+        }
+
+        if (!logDir.canWrite()) {
             logDir.setWritable(true);
         }
         int random = new Random().nextInt(100);
-        File logFile = new File(logDir,"log_"+random+".txt");
+        File logFile = new File(logDir, "log_" + random + ".txt");
         String fileName = logFile.getAbsolutePath();
         Log.d(LOG_TAG, "writeToSDCard(): fileName = " + fileName);
-        writeFileSdCardFile(fileName, "Hello! This is the "+random+" example to write sd card file!\n");
+        writeFileSdCardFile(fileName, "Hello! This is the " + random + " example to write sd card file!\n");
 
     }
 
 
     /**
      * Write to a file <code>fileName</code> with content <code>writeStr</code>.
+     *
      * @param fileName file name must be an absolute path name.
      * @param writeStr content to be written.
      */
@@ -107,8 +199,8 @@ public class FileOPActivity extends Activity {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
-        }finally {
-            if(fout != null){
+        } finally {
+            if (fout != null) {
                 try {
                     fout.close();
                 } catch (IOException e) {
@@ -119,14 +211,14 @@ public class FileOPActivity extends Activity {
 
     }
 
-    private void readFromSDCard() {
-        File logDir = new File(StorageUtil.getAbsoluteSdcardPath()+"/carlocation/log/");
-        if (!logDir.exists()){
-            Toast.makeText(FileOPActivity.this,"File Dir "+logDir.getAbsolutePath()+"doesn't exists!",Toast.LENGTH_LONG).show();
+    public void readFromSDCard() {
+        File logDir = new File(StorageUtil.getAbsoluteSdcardPath() + "/carlocation/log/");
+        if (!logDir.exists()) {
+            Toast.makeText(FileOPActivity.this, "File Dir " + logDir.getAbsolutePath() + "doesn't exists!", Toast.LENGTH_LONG).show();
             return;
         }
 
-        if (!logDir.canRead()){
+        if (!logDir.canRead()) {
             logDir.setReadable(true);
         }
 
@@ -134,10 +226,10 @@ public class FileOPActivity extends Activity {
 
         String retStr = "";
 
-        if (files != null && files.length != 0){
-            for (File file : files){
+        if (files != null && files.length != 0) {
+            for (File file : files) {
                 String content = readFileSdcardFile(file.getAbsolutePath());
-                retStr += "\n"+file.getName()+":"+content;
+                retStr += "\n" + file.getName() + ":" + content;
             }
         }
 
@@ -148,6 +240,7 @@ public class FileOPActivity extends Activity {
 
     /**
      * Read file content as String format from file.
+     *
      * @param fileName file name should be absolute file path.
      * @return file content as String format if success, null if read failed.
      */
@@ -163,8 +256,8 @@ public class FileOPActivity extends Activity {
 
             if (len <= 0) {
                 Log.i(LOG_TAG, "readFileSdcardFile(): error file " + fileName);
-            }else {
-                res = EncodingUtils.getString(buffer,"UTF-8");
+            } else {
+                res = EncodingUtils.getString(buffer, "UTF-8");
             }
 
         } catch (FileNotFoundException e) {
@@ -183,13 +276,35 @@ public class FileOPActivity extends Activity {
     }
 
 
-    private void readFromResAsset() {
+    /**
+     * Read file under assets
+     *
+     * @return string content of file <code>fileName</code> under assets
+     * null if read failed.
+     */
+    public String readFromAssets(String fileName) {
+        String ret = null;
+
+        try {
+            InputStream in = getResources().getAssets().open(fileName);
+
+            int length = in.available();
+            byte[] buffer = new byte[length];
+            in.read(buffer);
+            in.close();
+
+            ret = EncodingUtils.getString(buffer, "UTF-8");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            return ret;
+        }
 
     }
 
 
-
-    private void readFromResRaw() {
+    public void readFromResRaw() {
         String res = "";
         InputStream inputStream = getResources().openRawResource(R.raw.testfile);
 
@@ -198,7 +313,7 @@ public class FileOPActivity extends Activity {
             int legth = inputStream.available();
             byte[] buffer = new byte[legth];
             inputStream.read(buffer);
-            res = EncodingUtils.getString(buffer,"BIG5");
+            res = EncodingUtils.getString(buffer, "BIG5");
             inputStream.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -214,6 +329,8 @@ public class FileOPActivity extends Activity {
         button2 = (Button) findViewById(R.id.button2);
         button3 = (Button) findViewById(R.id.button3);
         button4 = (Button) findViewById(R.id.button4);
+        button5 = (Button) findViewById(R.id.button5);
+        button6 = (Button) findViewById(R.id.button6);
 
         textView = (TextView) findViewById(R.id.textView);
     }
