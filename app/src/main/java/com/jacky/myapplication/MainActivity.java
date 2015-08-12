@@ -11,7 +11,7 @@ import android.widget.ListView;
 
 public class MainActivity extends ListActivity {
 
-    private final static String[] ITEMS = {"File Operation Test","TIMER TEST"};
+    private final static String[] ITEMS = {"File Operation Test","TIMER TEST","SQlite Test"};
     ListView mListView = null;
 
     @Override
@@ -22,17 +22,18 @@ public class MainActivity extends ListActivity {
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                //Toast.makeText(MainActivity.this,"您选择了"+ITEMS[position],Toast.LENGTH_SHORT).show();
                 Intent intent = null;
                 switch (position){
                     case 0:
-                        //TODO start BMI app
                         intent = new Intent(MainActivity.this,FileOPActivity.class);
                         break;
                     case 1:
                         //start Timer activity
                         intent = new Intent(MainActivity.this,TimerActivity.class);
                         break;
+                    case 2:
+                        //Start DataBase activity
+                        intent = new Intent(MainActivity.this,DataBaseActivity.class);
                     default:break;
                 }
                 if (intent != null) {

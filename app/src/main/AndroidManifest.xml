@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.jacky.myapplication" >
 
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
@@ -25,6 +25,10 @@
         <activity
             android:name=".FileOPActivity"
             android:label="@string/title_activity_file_op" >
+        </activity>
+        <activity
+            android:name=".DataBaseActivity"
+            android:label="@string/title_activity_data_base" >
         </activity>
     </application>
 
