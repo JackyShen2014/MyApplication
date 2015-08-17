@@ -17,6 +17,8 @@ import android.widget.Toast;
 import com.jacky.myapplication.Util.DataBaseHelper;
 
 import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class DataBaseActivity extends Activity {
     private final static String LOG_TAG = "DataBaseActivity";
@@ -35,6 +37,8 @@ public class DataBaseActivity extends Activity {
     private TextView mTextViewShow;
 
     SQLiteDatabase database;
+
+    private final static String[] names = {"Jack","Jone","Kate","Hurley","Sayid","Desmond","Jin","Ben"};
 
 
 
@@ -130,10 +134,9 @@ public class DataBaseActivity extends Activity {
         ContentValues cv = new ContentValues();
 
         //为user table添加第一列数据
-        int random = new Random().nextInt();
-        String randStr = String.valueOf(random);
+        int random = new Random().nextInt(names.length);
         cv.put(COLUMN_1, new Integer(random));
-        cv.put(COLUMN_2,"Jacky_"+randStr);
+        cv.put(COLUMN_2,names[random]);
         database.insert(TABLE_NAME, null, cv);
     }
 

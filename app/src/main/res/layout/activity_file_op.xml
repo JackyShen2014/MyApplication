@@ -31,7 +31,7 @@
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Write File to SD Card"
+                android:text="Write File to internal SD Card"
                 android:id="@+id/button2"/>
 
             <Button
@@ -76,20 +76,15 @@
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="New Button"
-                android:id="@+id/button7"/>
+                android:text="Write file to external SD card"
+                android:id="@+id/button_write_externalSd"/>
 
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="New Button"
-                android:id="@+id/button8"/>
+                android:text="read"
+                android:id="@+id/button_read_externalSd"/>
 
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="New Button"
-                android:id="@+id/button9"/>
         </LinearLayout>
 
         <ScrollView

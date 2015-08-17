@@ -2,6 +2,7 @@ package com.jacky.myapplication;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -21,10 +22,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class FileOPActivity extends Activity {
     private final static String LOG_TAG = "FileOPActivity";
+
+    private final static String INTERNAL_SD_PATH = "storage/emulated/0";
+    private final static String EXTERNAL_SD_PATH = "storage/sdcard1";
 
     private Button button1;
     private Button button2;
@@ -32,6 +38,8 @@ public class FileOPActivity extends Activity {
     private Button button4;
     private Button button5;
     private Button button6;
+    private Button button7;
+    private Button button8;
 
     private TextView textView;
 
@@ -112,6 +120,59 @@ public class FileOPActivity extends Activity {
                 textView.setText(content);
             }
         });
+
+        button7.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                writeToExternalSd();
+            }
+        });
+
+        button8.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                readFromExternalSd();
+            }
+        });
+    }
+
+    private void readFromExternalSd() {
+
+    }
+
+    private void writeToExternalSd() {
+        String extSdDir = getExternalSdDir();
+        if (extSdDir == null){
+            Log.e(LOG_TAG,"writeToExternalSd(): failed to get external SD card path!");
+            return;
+        }
+
+        File file = new File(extSdDir);
+
+        //Check if external SD card file is exists.
+        if (!file.exists()){
+            Log.e(LOG_TAG,"writeToExternalSd(): no file exists!");
+            return;
+        }
+
+        //OK, now create a file in external SD card
+        File testDir = new File(file,"/Myapplication/test");
+
+        if (!testDir.exists()) {
+            testDir.setWritable(true);
+            boolean ret = testDir.mkdir();
+            Log.i(LOG_TAG, "writeToExternalSd(): create log dir: " + testDir.getAbsolutePath() + " " + ret);
+        }
+
+        if (!testDir.canWrite()) {
+            testDir.setWritable(true);
+        }
+        int random = new Random().nextInt(100);
+        File logFile = new File(testDir, "log_" + random + ".txt");
+        String fileName = logFile.getAbsolutePath();
+        Log.d(LOG_TAG, "writeToSDCard(): fileName = " + fileName);
+        writeFileSdCardFile(fileName, "Hello! This is the " + random + " example to write sd card file!\n");
+
     }
 
 
@@ -331,6 +392,9 @@ public class FileOPActivity extends Activity {
         button4 = (Button) findViewById(R.id.button4);
         button5 = (Button) findViewById(R.id.button5);
         button6 = (Button) findViewById(R.id.button6);
+        button7 = (Button) findViewById(R.id.button_write_externalSd);
+        button8 = (Button) findViewById(R.id.button_read_externalSd);
+
 
         textView = (TextView) findViewById(R.id.textView);
     }
@@ -355,5 +419,24 @@ public class FileOPActivity extends Activity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+
+    public String getExternalSdDir() {
+        File externalStorageDir = Environment.getExternalStorageDirectory();
+        Log.i(LOG_TAG, "writeToExternalSd(): external storage dir is " + externalStorageDir.getAbsolutePath());
+        String internalSdPath = externalStorageDir.getAbsolutePath();
+
+        Pattern pattern = Pattern.compile("/?storage/emulated/\\d");
+        Matcher matcher = pattern.matcher(internalSdPath);
+
+        if (matcher.find()){
+            internalSdPath.replaceAll(INTERNAL_SD_PATH,EXTERNAL_SD_PATH);
+            return internalSdPath;
+        }else {
+            Log.e(LOG_TAG,"getExternalSdDir(): can't resolve external path from internal SD card path!"+internalSdPath);
+            return null;
+        }
+
     }
 }

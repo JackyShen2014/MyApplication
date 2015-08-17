@@ -12,8 +12,9 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     private static final String LOG_TAG = "DataBaseHelper";
     private static String DATA_NAME;
     private static int version = 1;
-    private final static String COLUMN_1 = "id";
-    private final static String COLUMN_2 = "name";
+    private final static String TABLE_1 = "user";
+    private final static String TABLE_1_COLUMN_1 = "id";
+    private final static String TABLE_1_COLUMN_2 = "name";
 
 
 
@@ -27,7 +28,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         Log.i(LOG_TAG,"onCreate()");
         //创建数据可SQL语句,创建一个table（id:int,name:char）
-        String sql = "create table user(id int,name varchar(20))";
+        String sql = "create table"+TABLE_1+"(id int,name varchar(20))";
 
         //执行创建数据库操作
         db.execSQL(sql);
