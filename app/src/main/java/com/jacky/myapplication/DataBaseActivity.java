@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -14,19 +13,13 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.jacky.myapplication.Util.DataBaseHelper;
+import com.jacky.myapplication.DataBase.ContentDescriptor;
+import com.jacky.myapplication.DataBase.DataBaseHelper;
 
 import java.util.Random;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class DataBaseActivity extends Activity {
     private final static String LOG_TAG = "DataBaseActivity";
-
-    private final static String DATA_NAME = "test.db";
-    private final static String TABLE_NAME = "user";
-    private final static String COLUMN_1 = "id";
-    private final static String COLUMN_2 = "name";
 
     private Button mBtCreate;
     private Button mBtRead;
@@ -38,8 +31,7 @@ public class DataBaseActivity extends Activity {
 
     SQLiteDatabase database;
 
-    private final static String[] names = {"Jack","Jone","Kate","Hurley","Sayid","Desmond","Jin","Ben"};
-
+    private final static String[] names = {"Jack", "Jone", "Kate", "Hurley", "Sayid", "Desmond", "Jin", "Ben", "Sun"};
 
 
     @Override
@@ -92,24 +84,26 @@ public class DataBaseActivity extends Activity {
 
     private void readDatabase() {
         if (database == null) {
-            showToast("insert item failed due to no database created. Pls try create a new database");
-            Log.e(LOG_TAG, "insertItem():insert item failed due to no database created. Pls try create a new database");
+            showToast("No data base could be found. Pls try create a new database!");
+            Log.e(LOG_TAG, "readDatabase():No data base could be found. Pls try create a new database");
             return;
         }
 
-        Cursor cursor = database.query(TABLE_NAME, null, null, null, null, null, null, null);
-        // if (cursor.moveToFirst()){
+        Cursor cursor = database.query(DataBaseHelper.DB_NAME, null, null, null, null, null, null, null);
+
         String show = "";
         while (cursor.moveToNext()) {
-            //  for (int i=0;i<cursor.getCount();i++){
-           // cursor.move(i);
-            int id = cursor.getInt(cursor.getColumnIndex(COLUMN_1));
-            String name = cursor.getString(cursor.getColumnIndex(COLUMN_2));
-            show += "id:\t" + String.valueOf(id) + "\t" + "name:\t" + name + "\n";
+            int id = cursor.getInt(cursor.getColumnIndex(ContentDescriptor.HistoriesMessage.Cols.ID));
+            String name = cursor.getString(cursor.getColumnIndex(ContentDescriptor.HistoriesMessage.Cols.OWNER_USER_NAME));
+            int groupType = cursor.getInt(cursor.getColumnIndex(ContentDescriptor.HistoriesMessage.Cols.HISTORY_MESSAGE_GROUP_TYPE));
+            show += "id:\t" + String.valueOf(id)
+                    + "\t" + "name:\t" + name
+                    + "\t" + "groupType:\t" + groupType
+                    + "\n";
         }
 
-            showToTextView(show);
-      ////  }
+        showToTextView(show);
+
 
     }
 
@@ -119,15 +113,15 @@ public class DataBaseActivity extends Activity {
     }
 
     private void insertItem() {
-        if (database == null){
+        if (database == null) {
             showToast("insert item failed due to no database created. Pls try create a new database");
-            Log.e(LOG_TAG,"insertItem():insert item failed due to no database created. Pls try create a new database");
+            Log.e(LOG_TAG, "insertItem():insert item failed due to no database created. Pls try create a new database");
             return;
         }
 
-        if (database.isReadOnly()){
+        if (database.isReadOnly()) {
             showToast("insert item failed due to database is read only!");
-            Log.e(LOG_TAG,"insertItem(): insert item failed due to database is read only!");
+            Log.e(LOG_TAG, "insertItem(): insert item failed due to database is read only!");
             return;
         }
 
@@ -135,13 +129,13 @@ public class DataBaseActivity extends Activity {
 
         //为user table添加第一列数据
         int random = new Random().nextInt(names.length);
-        cv.put(COLUMN_1, new Integer(random));
-        cv.put(COLUMN_2,names[random]);
-        database.insert(TABLE_NAME, null, cv);
+        cv.put(ContentDescriptor.HistoriesMessage.Cols.OWNER_USER_NAME, names[random]);
+        cv.put(ContentDescriptor.HistoriesMessage.Cols.HISTORY_MESSAGE_GROUP_TYPE, new Integer(random));
+        database.insert(DataBaseHelper.DB_NAME, null, cv);
     }
 
     private void createDatabase() {
-        DataBaseHelper dataBaseHelper = new DataBaseHelper(this,DATA_NAME,null,1);
+        DataBaseHelper dataBaseHelper = DataBaseHelper.getInstance(this);
         database = dataBaseHelper.getWritableDatabase();
     }
 
@@ -177,7 +171,7 @@ public class DataBaseActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
-    private void showToast(String str){
-        Toast.makeText(this,str,Toast.LENGTH_SHORT).show();
+    private void showToast(String str) {
+        Toast.makeText(this, str, Toast.LENGTH_SHORT).show();
     }
 }
