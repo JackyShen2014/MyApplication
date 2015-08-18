@@ -131,15 +131,43 @@ public class FileOPActivity extends Activity {
         button8.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                readFromExternalSd();
+                String content = readFromExternalSd();
+                if (content == null){
+                    textView.setText("");
+                }else {
+                    textView.setText(content);
+                }
             }
         });
     }
 
-    private void readFromExternalSd() {
+    private String readFromExternalSd() {
+        String extSdDir = getExternalSdDir();
+        if (extSdDir == null){
+            Log.e(LOG_TAG,"readFromExternalSd(): failed to get external SD card path!");
+            return null;
+        }
 
+        File file = new File(extSdDir);
+
+        //Check if external SD card file is exists.
+        if (!file.exists()){
+            Log.e(LOG_TAG,"readFromExternalSd(): no file exists!");
+            return null;
+        }
+
+        File testDir = new File(file,"/Myapplication/test");
+        if (!testDir.exists()) {
+            return null;
+        }
+
+        String content = readFromAppFiles(testDir.getAbsolutePath());
+        return content;
     }
 
+    /**
+     * Write to second external SD card.
+     */
     private void writeToExternalSd() {
         String extSdDir = getExternalSdDir();
         if (extSdDir == null){
@@ -156,12 +184,17 @@ public class FileOPActivity extends Activity {
         }
 
         //OK, now create a file in external SD card
-        File testDir = new File(file,"/Myapplication/test");
+        File testDir = new File(file,"Android/data/com.jacky.myapplication/test");
 
         if (!testDir.exists()) {
+            //FIXME it always couldn't make dir successfully. I don't know the root cause so far.
+            boolean ret = testDir.mkdirs();
             testDir.setWritable(true);
-            boolean ret = testDir.mkdir();
             Log.i(LOG_TAG, "writeToExternalSd(): create log dir: " + testDir.getAbsolutePath() + " " + ret);
+            if (ret == false){
+                Toast.makeText(this,"No sd card could be found!",Toast.LENGTH_SHORT).show();
+                return;
+            }
         }
 
         if (!testDir.canWrite()) {
@@ -430,9 +463,11 @@ public class FileOPActivity extends Activity {
         Pattern pattern = Pattern.compile("/?storage/emulated/\\d");
         Matcher matcher = pattern.matcher(internalSdPath);
 
-        if (matcher.find()){
-            internalSdPath.replaceAll(INTERNAL_SD_PATH,EXTERNAL_SD_PATH);
-            return internalSdPath;
+
+        if (matcher.matches()){
+            String extSdPath = internalSdPath.replace(INTERNAL_SD_PATH,EXTERNAL_SD_PATH);
+            Log.i(LOG_TAG,"getExternalSdDir(): external sd card path is "+extSdPath);
+            return extSdPath;
         }else {
             Log.e(LOG_TAG,"getExternalSdDir(): can't resolve external path from internal SD card path!"+internalSdPath);
             return null;
