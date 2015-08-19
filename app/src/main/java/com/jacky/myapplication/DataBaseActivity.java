@@ -31,7 +31,8 @@ public class DataBaseActivity extends Activity {
     private Button mBtDrop;
     private TextView mTextViewShow;
 
-    SQLiteDatabase database;
+    private DataBaseHelper mDataBaseHelper;
+    SQLiteDatabase mDataBase;
 
     private final static String[] names = {"Jack", "Jone", "Kate", "Hurley", "Sayid", "Desmond", "Jin", "Ben", "Sun"};
 
@@ -95,9 +96,9 @@ public class DataBaseActivity extends Activity {
         if (!checkDBExist()) return;
 
         Log.i(LOG_TAG, "DropTable():Drop the current table!");
-        database.execSQL(DataBaseHelper.HISTORIES_MESSAGE_TABLE_DROP_SQL);
-
-        database.close();
+        mDataBase.execSQL(DataBaseHelper.HISTORIES_MESSAGE_TABLE_DROP_SQL);
+        mDataBaseHelper.onCreate(mDataBase);
+        mDataBase.close();
     }
 
     /**
@@ -119,7 +120,7 @@ public class DataBaseActivity extends Activity {
             String whereClause = ContentDescriptor.HistoriesMessage.Cols.OWNER_USER_NAME+"=?";
             String[] whereArgs = {list.get(new Random().nextInt(list.size()-1))};
 
-            database.update(ContentDescriptor.HistoriesMessage.NAME, cv, whereClause, whereArgs);
+            mDataBase.update(ContentDescriptor.HistoriesMessage.NAME, cv, whereClause, whereArgs);
         }
 
 
@@ -132,7 +133,7 @@ public class DataBaseActivity extends Activity {
 
         List<String> list = new ArrayList<>();
 
-        Cursor cursor = database.query(ContentDescriptor.HistoriesMessage.NAME, null, null, null, null, null, null, null);
+        Cursor cursor = mDataBase.query(ContentDescriptor.HistoriesMessage.NAME, null, null, null, null, null, null, null);
 
 
         while (cursor.moveToNext()) {
@@ -156,7 +157,7 @@ public class DataBaseActivity extends Activity {
             String whereClause = ContentDescriptor.HistoriesMessage.Cols.OWNER_USER_NAME+"=?";
             String[] whereArgs = {list.get(new Random().nextInt(list.size()))};
 
-            database.delete(ContentDescriptor.HistoriesMessage.NAME, whereClause, whereArgs);
+            mDataBase.delete(ContentDescriptor.HistoriesMessage.NAME, whereClause, whereArgs);
         }
 
     }
@@ -174,7 +175,7 @@ public class DataBaseActivity extends Activity {
             return null;
         }
 
-        Cursor cursor = database.query(ContentDescriptor.HistoriesMessage.NAME, null, null, null, null, null, null, null);
+        Cursor cursor = mDataBase.query(ContentDescriptor.HistoriesMessage.NAME, null, null, null, null, null, null, null);
 
         String show = "";
         while (cursor.moveToNext()) {
@@ -209,11 +210,11 @@ public class DataBaseActivity extends Activity {
         int random = new Random().nextInt(names.length);
         cv.put(ContentDescriptor.HistoriesMessage.Cols.OWNER_USER_NAME, names[random]);
         cv.put(ContentDescriptor.HistoriesMessage.Cols.HISTORY_MESSAGE_GROUP_TYPE, new Integer(random));
-        database.insert(ContentDescriptor.HistoriesMessage.NAME, null, cv);
+        mDataBase.insert(ContentDescriptor.HistoriesMessage.NAME, null, cv);
     }
 
     private boolean checkDBExist() {
-        if (database == null) {
+        if (mDataBase == null) {
             showToast("No data base could be found. Pls try create a new database!");
             Log.e(LOG_TAG, "readDatabase():No data base could be found. Pls try create a new database");
             return false;
@@ -223,7 +224,7 @@ public class DataBaseActivity extends Activity {
 
     private boolean checkDBWritable() {
         if (checkDBExist()){
-            if (!database.isReadOnly()) {
+            if (!mDataBase.isReadOnly()) {
                 return true;
             }else {
                 showToast("insert item failed due to database is read only!");
@@ -240,8 +241,8 @@ public class DataBaseActivity extends Activity {
      * @see DataBaseHelper
      */
     public void createDatabase() {
-        DataBaseHelper dataBaseHelper = DataBaseHelper.getInstance(this);
-        database = dataBaseHelper.getWritableDatabase();
+        mDataBaseHelper = DataBaseHelper.getInstance(this);
+        mDataBase = mDataBaseHelper.getWritableDatabase();
     }
 
     private void findViews() {
@@ -279,7 +280,6 @@ public class DataBaseActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        database = null;
     }
 
     private void showToast(String str) {
