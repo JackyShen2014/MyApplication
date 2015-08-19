@@ -16,6 +16,8 @@ import android.widget.Toast;
 import com.jacky.myapplication.DataBase.ContentDescriptor;
 import com.jacky.myapplication.DataBase.DataBaseHelper;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class DataBaseActivity extends Activity {
@@ -26,7 +28,7 @@ public class DataBaseActivity extends Activity {
     private Button mBtInsert;
     private Button mBtDelete;
     private Button mBtUpdate;
-    private Button mBtQuery;
+    private Button mBtDrop;
     private TextView mTextViewShow;
 
     SQLiteDatabase database;
@@ -52,7 +54,10 @@ public class DataBaseActivity extends Activity {
         mBtRead.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                readDatabase();
+                String content  = readDatabase();
+                if (content != null){
+                    showToTextView(content);
+                }
             }
         });
         mBtInsert.setOnClickListener(new View.OnClickListener() {
@@ -64,32 +69,112 @@ public class DataBaseActivity extends Activity {
         mBtDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //deleteItem();
+                deleteItem();
             }
         });
 
         mBtUpdate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //updateItem();
+                updateItem();
             }
         });
-        mBtQuery.setOnClickListener(new View.OnClickListener() {
+        mBtDrop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //queryItem();
+                dropTable();
             }
         });
     }
 
-    private void readDatabase() {
-        if (database == null) {
-            showToast("No data base could be found. Pls try create a new database!");
-            Log.e(LOG_TAG, "readDatabase():No data base could be found. Pls try create a new database");
-            return;
+
+    /**
+     * Drop table
+     */
+    public void dropTable() {
+        if (!checkDBExist()) return;
+
+        Log.i(LOG_TAG, "DropTable():Drop the current table!");
+        database.execSQL(DataBaseHelper.HISTORIES_MESSAGE_TABLE_DROP_SQL);
+
+        database.close();
+    }
+
+    /**
+     * Update one row in random with random content.
+     */
+    public void updateItem() {
+        if (!checkDBWritable()) return;
+
+        ContentValues cv = new ContentValues();
+        int groupType  = new Random().nextInt(names.length);
+        String addName = names[groupType];
+        cv.put(ContentDescriptor.HistoriesMessage.Cols.OWNER_USER_NAME,addName);
+        cv.put(ContentDescriptor.HistoriesMessage.Cols.HISTORY_MESSAGE_GROUP_TYPE,groupType);
+
+        //Get all UserName column content
+        List<String> list = getUserNameCols();
+
+        if (list != null){
+            String whereClause = ContentDescriptor.HistoriesMessage.Cols.OWNER_USER_NAME+"=?";
+            String[] whereArgs = {list.get(new Random().nextInt(list.size()-1))};
+
+            database.update(ContentDescriptor.HistoriesMessage.NAME, cv, whereClause, whereArgs);
         }
 
-        Cursor cursor = database.query(DataBaseHelper.DB_NAME, null, null, null, null, null, null, null);
+
+    }
+
+    private List<String> getUserNameCols() {
+        if(!checkDBExist()){
+            return null;
+        }
+
+        List<String> list = new ArrayList<>();
+
+        Cursor cursor = database.query(ContentDescriptor.HistoriesMessage.NAME, null, null, null, null, null, null, null);
+
+
+        while (cursor.moveToNext()) {
+            String name = cursor.getString(cursor.getColumnIndex(ContentDescriptor.HistoriesMessage.Cols.OWNER_USER_NAME));
+            list.add(name);
+        }
+        return list;
+    }
+
+
+    /**
+     * Delete on row in random according random name.
+     */
+    public void deleteItem() {
+        if (!checkDBWritable()) return;
+
+        //Get all UserName column content
+        List<String> list = getUserNameCols();
+
+        if (list != null){
+            String whereClause = ContentDescriptor.HistoriesMessage.Cols.OWNER_USER_NAME+"=?";
+            String[] whereArgs = {list.get(new Random().nextInt(list.size()))};
+
+            database.delete(ContentDescriptor.HistoriesMessage.NAME, whereClause, whereArgs);
+        }
+
+    }
+
+    /**
+     *
+     */
+    /**
+     * Use <code>query</code> to retrieve cursor pointed table and read it's content
+     * by <code>cursor.moveToNext()</code>
+     * @return null if database is not exist; otherwise content of database.
+     */
+    public String readDatabase() {
+        if(!checkDBExist()){
+            return null;
+        }
+
+        Cursor cursor = database.query(ContentDescriptor.HistoriesMessage.NAME, null, null, null, null, null, null, null);
 
         String show = "";
         while (cursor.moveToNext()) {
@@ -97,44 +182,64 @@ public class DataBaseActivity extends Activity {
             String name = cursor.getString(cursor.getColumnIndex(ContentDescriptor.HistoriesMessage.Cols.OWNER_USER_NAME));
             int groupType = cursor.getInt(cursor.getColumnIndex(ContentDescriptor.HistoriesMessage.Cols.HISTORY_MESSAGE_GROUP_TYPE));
             show += "id:\t" + String.valueOf(id)
-                    + "\t" + "name:\t" + name
-                    + "\t" + "groupType:\t" + groupType
+                    + "\t\t\t" + "name:\t" + name
+                    + "\t\t\t" + "groupType:\t" + groupType
                     + "\n";
         }
 
-        showToTextView(show);
-
-
+        return show;
     }
+
 
     private void showToTextView(String show) {
         if (show == null) return;
         mTextViewShow.setText(show);
     }
 
-    private void insertItem() {
-        if (database == null) {
-            showToast("insert item failed due to no database created. Pls try create a new database");
-            Log.e(LOG_TAG, "insertItem():insert item failed due to no database created. Pls try create a new database");
-            return;
-        }
-
-        if (database.isReadOnly()) {
-            showToast("insert item failed due to database is read only!");
-            Log.e(LOG_TAG, "insertItem(): insert item failed due to database is read only!");
-            return;
-        }
+    /**
+     * Insert a row to data base by <code>database.insert()</code>
+     *
+     */
+    public void insertItem() {
+        if (!checkDBWritable()) return;
 
         ContentValues cv = new ContentValues();
 
-        //为user table添加第一列数据
+        //为user table添加一列数据
         int random = new Random().nextInt(names.length);
         cv.put(ContentDescriptor.HistoriesMessage.Cols.OWNER_USER_NAME, names[random]);
         cv.put(ContentDescriptor.HistoriesMessage.Cols.HISTORY_MESSAGE_GROUP_TYPE, new Integer(random));
-        database.insert(DataBaseHelper.DB_NAME, null, cv);
+        database.insert(ContentDescriptor.HistoriesMessage.NAME, null, cv);
     }
 
-    private void createDatabase() {
+    private boolean checkDBExist() {
+        if (database == null) {
+            showToast("No data base could be found. Pls try create a new database!");
+            Log.e(LOG_TAG, "readDatabase():No data base could be found. Pls try create a new database");
+            return false;
+        }
+        return true;
+    }
+
+    private boolean checkDBWritable() {
+        if (checkDBExist()){
+            if (!database.isReadOnly()) {
+                return true;
+            }else {
+                showToast("insert item failed due to database is read only!");
+                Log.e(LOG_TAG, "insertItem(): insert item failed due to database is read only!");
+            }
+        }
+
+        return false;
+
+    }
+
+    /**
+     * Create a data base by <code>DataBaseHelper</code>
+     * @see DataBaseHelper
+     */
+    public void createDatabase() {
         DataBaseHelper dataBaseHelper = DataBaseHelper.getInstance(this);
         database = dataBaseHelper.getWritableDatabase();
     }
@@ -145,7 +250,7 @@ public class DataBaseActivity extends Activity {
         mBtInsert = (Button) findViewById(R.id.button_insert);
         mBtDelete = (Button) findViewById(R.id.button_delete);
         mBtUpdate = (Button) findViewById(R.id.button_update);
-        mBtQuery = (Button) findViewById(R.id.button_query);
+        mBtDrop = (Button) findViewById(R.id.button_drop);
         mTextViewShow = (TextView) findViewById(R.id.textView_showDB);
     }
 
@@ -169,6 +274,12 @@ public class DataBaseActivity extends Activity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        database = null;
     }
 
     private void showToast(String str) {

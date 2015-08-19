@@ -42,7 +42,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 
     }
 
-    private static final String HISTORIES_MESSAGE_TABLE_CREATE_SQL = " create table "
+    private static final String HISTORIES_MESSAGE_TABLE_CREATE_SQL = " CREATE TABLE IF NOT EXISTS "
                     + ContentDescriptor.HistoriesMessage.NAME
                     + " ( "
                     + ContentDescriptor.HistoriesMessage.Cols.ID
@@ -51,4 +51,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
                     + " nvarchar(40),"
                     + ContentDescriptor.HistoriesMessage.Cols.HISTORY_MESSAGE_GROUP_TYPE
                     + " bigint)";
+
+    public static final String HISTORIES_MESSAGE_TABLE_DROP_SQL = " DROP TABLE IF EXISTS "
+            + ContentDescriptor.HistoriesMessage.NAME;
 }

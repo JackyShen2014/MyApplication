@@ -62,8 +62,8 @@
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="query"
-                android:id="@+id/button_query"
+                android:text="Drop List"
+                android:id="@+id/button_drop"
                 android:layout_below="@+id/button_delete"
                 android:layout_alignParentEnd="true"/>
 
